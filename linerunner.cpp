@@ -74,6 +74,8 @@ void ParseFile(ifstream& ReadFile)
 			cout << "Runner '" << runner << "' did a run " << days << " days after start, with a time of " << time << " seconds.\n";
 		}
 	}
+	if (useCategories)
+		cout << "End of category named '" << category << "'.\n";
 }
 
 int main(int argc, char* argv[])
