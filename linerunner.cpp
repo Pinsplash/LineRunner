@@ -11,49 +11,99 @@ struct Runner
 	string color;
 };
 
-char RandomHex()
+struct Run
 {
-	char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', } hex;
-	return hex[rand() % 16];
+	string name;
+	string color;
+	double days;
+	double time;
+};
+
+struct Category
+{
+	string name;
+	vector<Run> runs;
+};
+
+struct GraphProperties
+{
+	bool randomColors;
+	double circleRadius;
+	double lineWidth;
+	double xScale;
+	double yScale;
+	double width;
+	double height;
+	double lowestTime;
+};
+
+string RandomHex()
+{
+	string hex = "0123456789abcdef";
+	string s(1, hex[rand() % 16]);
+	return s;
 }
 
-void ParseFile(ifstream& ReadFile, bool getRunnerData, vector<Runner>& runners, bool randomColors, double circleRadius, double lineWidth, double xScale, double yScale)
+string RandomColor()
+{
+	string start = "#";
+	return start.append(RandomHex()).append(RandomHex()).append(RandomHex()).append(RandomHex()).append(RandomHex()).append(RandomHex());
+}
+
+string GetRunnerColor(vector<Runner>& runners, string name)
+{
+	for (Runner& runner : runners)
+	{
+		if (!strcmp(runner.name.c_str(), name.c_str()))
+		{
+			return runner.color;
+		}
+	}
+	return "";
+}
+
+void ParseFile(ifstream& ReadFile, vector<Runner>& runners, vector<Category>& categories, GraphProperties& props)
 {
 	string textLine;
 	string category;
-	string runner;
+	string name;
 	double days;
 	double time;
+	double biggestTime = 0;
+	double smallestTime = FLT_MAX;
 	bool useCategories = false;
-	bool streak;
-	for (int i = 0; getline(ReadFile, textLine); i++)
+	while (getline(ReadFile, textLine))
 	{
-		bool no3rdCell = false;
 		//skip any blank lines
 		if (textLine.size() == 0)
 			continue;
+
 		//string 1: Category keyword, or runner name
 		size_t s1End = textLine.find(',');
 		string str1 = textLine.substr(0, s1End);
 		if (s1End == string::npos || str1.size() == 0)
 		{
-			if (!getRunnerData) cout << "Line '" << textLine << "' did not have 1st string. (Runner name)\n";
+			cout << "Line '" << textLine << "' did not have 1st string. (Runner name)\n";
 			continue;
 		}
+
 		//string 2: Name of category, or days since beginning point that run happened on
 		size_t s2Start = s1End + 1;
 		size_t s2End = textLine.find(',', s2Start + 1);
 		string str2 = textLine.substr(s2Start, s2End - s2Start);
 		if (s2Start == string::npos || s2End == string::npos || str2.size() == 0)
 		{
-			if (!getRunnerData) cout << "Line '" << textLine << "' did not have 2nd string. (Days or category name) First string was '" << str1 << "'.\n";
+			cout << "Line '" << textLine << "' did not have 2nd string. (Days or category name) First string was '" << str1 << "'.\n";
 			continue;
 		}
+
 		//string 3: Run time. Should not exist if using category keyword.
 		size_t s3Start = s2End + 1;
 		string str3 = textLine.substr(s3Start, textLine.size() - s3Start);
+		bool no3rdCell = false;
 		if (s3Start == string::npos || str3.size() == 0)
 			no3rdCell = true;
+
 		if (str1 == "category" || str1 == "Category")
 		{
 			//no fear
@@ -63,89 +113,175 @@ void ParseFile(ifstream& ReadFile, bool getRunnerData, vector<Runner>& runners, 
 			{
 				if (category.size() > 0)
 				{
-					if (!getRunnerData) cout << "End of category named '" << category << "'.\n";
+					cout << "End of category named '" << category << "'.\n";
 				}
-				if (!getRunnerData) cout << "Starting category named '" << str2 << "'.\n";
+				cout << "Starting category named '" << str2 << "'.\n";
 				category = str2;
 				useCategories = true;
-				runner.clear();
+				name.clear();
+				Category newCat;
+				newCat.name = category;
+				categories.push_back(newCat);
+				continue;
 			}
 		}
 		else if (no3rdCell)
 		{
-			if (!getRunnerData) cout << "Line '" << textLine << "' did not have 3rd string (Run time) and this line wasn't telling us about a new category. First string was '" << str1 << "'. Second string was '" << str2 << "'.\n";
+			cout << "Line '" << textLine << "' did not have 3rd string (Run time) and this line wasn't telling us about a new category. First string was '" << str1 << "'. Second string was '" << str2 << "'.\n";
 			continue;
 		}
-		else
+
+		name = str1;
+
+		days = atof(str2.c_str());
+		if (days > props.width)
+			props.width = days;
+
+		time = atof(str3.c_str());
+		if (time > biggestTime)
+			biggestTime = time;
+		if (time < smallestTime)
+			smallestTime = time;
+
+		//if this runner's name is new to us, add to the list
+		bool bNewRunner = true;
+		int k = -1;
+		for (Runner& runner : runners)
 		{
-			if (runner.size() > 0 && runner != str1)
-				if (!getRunnerData) cout << "Streak by '" << runner << "' ended by '" << str1 << "'.\n";
-			streak = runner == str1;
-			runner = str1;
-			if (getRunnerData)
-				runners[i].name = runner;
-			days = atof(str2.c_str());
-			time = atof(str3.c_str());
-			if (!getRunnerData) cout << "Runner '" << runner << "' did a run " << days << " days after start, with a time of " << time << " seconds.\n";
+			k++;
+			if (!strcmp(runner.name.c_str(), name.c_str()))
+			{
+				bNewRunner = false;
+				break;
+			}
 		}
+		if (bNewRunner)
+		{
+			Runner pNewRunner;
+			pNewRunner.name = name;
+			runners.push_back(pNewRunner);
+			k = (int)runners.size() - 1;
+		}
+		Run newRun;
+		newRun.name = runners[k].name;
+		newRun.color = runners[k].color;
+		newRun.days = days;
+		newRun.time = time;
+		//find category to add us to
+		for (Category& cat : categories)
+		{
+			if (cat.name == category)
+			{
+				cat.runs.push_back(newRun);
+			}
+		}
+		cout << "Runner '" << newRun.name << "' did a run " << newRun.days << " days after start, with a time of " << newRun.time << " seconds.\n";
 	}
-	if (useCategories)
-	{
-		if (!getRunnerData) cout << "End of category named '" << category << "'.\n";
-	}
+	props.height = biggestTime - smallestTime;
+	props.lowestTime = smallestTime;
 }
 
 int main(int argc, char* argv[])
 {
 	vector<Runner> runners;
+	vector<Category> categories;
+	GraphProperties props;
 	bool debug = argc == 1;
-	bool randomColors = false;
+	props.randomColors = false;
 	string answer;
 	string clrAnswer;
 	string path = debug ? "data.csv" : argv[1];
 	ifstream ReadFile(path);
-	cout << "Got file " << path << "\n";
+	string base_filename = path.substr(path.find_last_of("/\\") + 1);
+	string::size_type const p(base_filename.find_last_of('.'));
+	string file_without_extension = base_filename.substr(0, p);
+	ofstream writingFile;
+	writingFile.open(file_without_extension + ".svg");
+	ParseFile(ReadFile, runners, categories, props);
+
+	cout << "\nGot file " << path << "\n";
 	cout << "Do you want individual colors for every runner?\nType 1 to use individual colors for every runner, then press ENTER.\n2 to use the same color for all runners.\n";
-	getline(std::cin, answer);
-	ParseFile(ReadFile, true, runners, randomColors);
-	switch (answer)
+	getline(cin, answer);
+	if (answer == "1")
 	{
-	case "1":
 		for (Runner& runner : runners)
 		{
 			cout << "Please enter color to use for runner '" << runner.name << "'. (e.g. #ff00ff)\n";
-			getline(std::cin, clrAnswer);
+			getline(cin, clrAnswer);
 			runner.color = clrAnswer;
 		}
-	case "1 random":
+	}
+	if (answer == "1 random")
+	{
 		cout << "Every RUNNER will have a random color.\n";
 		for (Runner& runner : runners)
-		{
-			runner.color = RandomHex() << RandomHex() << RandomHex() << RandomHex() << RandomHex() << RandomHex();
-		}
-	case "2":
+			runner.color = RandomColor();
+	}
+	if (answer == "2")
+	{
 		cout << "Please enter color to use for all runs. (e.g. #ff00ff)\n";
 		for (Runner& runner : runners)
 		{
-			getline(std::cin, clrAnswer);
+			getline(cin, clrAnswer);
 			runner.color = clrAnswer;
 		}
-	case "2 random":
+	}
+	if (answer == "2 random")
+	{
 		cout << "Every RUN will have a random color.\n";
-		randomColors = true;
+		props.randomColors = true;
 	}
 	cout << "Please enter radius for circles (suggested: 10)\n";
-	getline(std::cin, answer);
-	double circleRadius = atof(answer);
+	getline(cin, answer);
+	props.circleRadius = atof(answer.c_str());
 	cout << "Please enter width for lines (suggested: 4)\n";
-	getline(std::cin, answer);
-	double lineWidth = atof(answer);
+	getline(cin, answer);
+	props.lineWidth = atof(answer.c_str());
 	cout << "Please enter X scale (normal is 1)\n";
-	getline(std::cin, answer);
-	double xScale = atof(answer);
+	getline(cin, answer);
+	props.xScale = atof(answer.c_str());
 	cout << "Please enter Y scale (normal is 1)\n";
-	getline(std::cin, answer);
-	double yScale = atof(answer);
-	ParseFile(ReadFile, false, runners, randomColors, circleRadius, lineWidth, xScale, yScale);
+	getline(cin, answer);
+	props.yScale = atof(answer.c_str());
+
+	cout << "Starting writing to " << file_without_extension << ".cfg\n";
+	writingFile << "<?xml version=\"1.0\" encoding=\"UTF - 8\" standalone=\"no\"?>\n";
+	writingFile << "<svg width = \"" << props.width * props.xScale << "mm\" height = \"" << props.height * props.yScale << "mm\" viewBox = \"0 0 " << props.width * props.xScale << " " << props.height * props.yScale << "\" version = \"1.1\" id = \"svg1\" > \n";
+	for (Category& category : categories)
+	{
+		writingFile << "<g id=\"" << category.name << "\">\n";
+		string color;
+		if (props.randomColors)
+			color = RandomColor();
+		else
+			color = GetRunnerColor(runners, category.runs[0].name);
+		string name = category.runs[0].name;
+		double days = category.runs[0].days;
+		double time = category.runs[0].time;
+		writingFile << "<circle style = \"fill:" << color << "\" id = \"" << name << "\" cx = \"" << days * props.xScale << "\" cy = \"" << (time - props.lowestTime) * props.yScale << "\" r = \"" << props.circleRadius << "\"/>\n";
+		for (int i = 1; i < category.runs.size(); i++)
+		{
+			Run &run = category.runs[i];
+			writingFile << "<path style = \"stroke-width:" << props.lineWidth << ";stroke:" << color << ";stroke-opacity:1\" d = \"M "
+				<< days * props.xScale <<		"," << (time - props.lowestTime) * props.yScale << " "
+				<< run.days * props.xScale << "," << (run.time - props.lowestTime) * props.yScale << "\" id = \"" << name << "\"/>\n";
+			color;
+			if (props.randomColors)
+				color = RandomColor();
+			else
+				color = GetRunnerColor(runners, run.name);
+			name = run.name;
+			days = run.days;
+			time = run.time;
+			writingFile << "<circle style = \"fill:" << color << "\" id = \"" << name << "\" cx = \"" << run.days * props.xScale << "\" cy = \"" << (run.time - props.lowestTime) * props.yScale << "\" r = \"" << props.circleRadius << "\"/>\n";
+		}
+		writingFile << "</g>\n";
+	}
+	writingFile << "</svg>\n";
+	cout << "Finished writing to " << file_without_extension << ".cfg\n";
+	writingFile.close();
 	ReadFile.close();
+
+	cout << "Done. Press ENTER or the X button to close.\n";
+	cin.get();
 }
