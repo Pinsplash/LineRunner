@@ -12,6 +12,7 @@ void ParseFile(ifstream& ReadFile)
 	double days;
 	double time;
 	bool useCategories = false;
+	bool streak;
 	while (getline(ReadFile, textLine))
 	{
 		bool no3rdCell = false;
@@ -64,6 +65,9 @@ void ParseFile(ifstream& ReadFile)
 		}
 		else
 		{
+			if (runner.size() > 0 && runner != str1 && streak)
+				cout << "Streak by '" << runner << "' ended by '" << str1 << "'.\n";
+			streak = runner == str1;
 			runner = str1;
 			days = atof(str2.c_str());
 			time = atof(str3.c_str());
