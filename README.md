@@ -15,7 +15,7 @@ Example input:
 ![image](https://github.com/Pinsplash/LineRunner/assets/39359267/a349a99a-e620-44f9-9c60-4bbedd62b7a9)
 
 ## Usage
-Download the program from here: _
+Download the program from [here](https://github.com/Pinsplash/LineRunner/releases).
 
 Drag your CSV file onto linerunner.exe. You will then be asked to enter a bit of information about how you want the graph to look.
 
