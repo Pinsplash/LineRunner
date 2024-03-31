@@ -15,8 +15,8 @@ struct Run
 {
 	string name;
 	string color;
-	double days;
-	double time;
+	double days = 0;
+	double time = 0;
 };
 
 struct Category
@@ -220,11 +220,9 @@ int main(int argc, char* argv[])
 	if (answer == "2")
 	{
 		cout << "Please enter color to use for all runs. (e.g. #ff00ff)\n";
+		getline(cin, clrAnswer);
 		for (Runner& runner : runners)
-		{
-			getline(cin, clrAnswer);
 			runner.color = clrAnswer;
-		}
 	}
 	if (answer == "2 random")
 	{
@@ -249,7 +247,7 @@ int main(int argc, char* argv[])
 	writingFile << "<svg width = \"" << props.width * props.xScale << "mm\" height = \"" << props.height * props.yScale << "mm\" viewBox = \"0 0 " << props.width * props.xScale << " " << props.height * props.yScale << "\" version = \"1.1\" id = \"svg1\" > \n";
 	for (Category& category : categories)
 	{
-		writingFile << "<g id=\"" << category.name << "\">\n";
+		writingFile << "<g inkscape:groupmode=\"layer\" id=\"" << category.name << "\">\n";
 		string color;
 		if (props.randomColors)
 			color = RandomColor();
