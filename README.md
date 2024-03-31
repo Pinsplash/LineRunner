@@ -1,7 +1,7 @@
 # Line Runner
 This program takes a CSV input and turns it into an SVG line graph. Intended to be used for creating speedrun history graphs. This was used in the making of this video: _
 
-Making a speedrun history graph by hand can be difficult and time-consuming. Some errors existed in my graph for Half-Life. SVG (Scalable Vector Graphics) allows you to zoom in infinitely on your graph, eliminating any need to use pixelated images.
+Making a speedrun history graph by hand is error-prone and time-consuming. Some errors existed in my graph for Half-Life. SVG (Scalable Vector Graphics) allows you to zoom in infinitely on your graph, eliminating any need to use pixelated images.
 
 ## CSV Format
 If you don't have a program to make a CSV file, Google Sheets will work fine. Speedrun.com has a button to download world records in CSV format. The CSV should contain only world records, and in the order they occurred in. If there are non-record runs included, you will need to personally fix the lines drawn between them. Avoid commas and quote marks as these will lead to broken results.
@@ -21,13 +21,13 @@ Drag your CSV file onto linerunner.exe. You will then be asked to enter a bit of
 
 * Colors: Decide how you would like the runs to be colored. Each runner can be given their own color.
 * Circle Radius and Line Width: Experiment with these. Good values will depend on how big the graph is and how far apart runs are.
-* X and Y Scale: Scales the graph on the X and Y axes without distorting lines and circles. Graphs for older games will generally be very stretched out, so this can be used to put the graph in a more readable aspect ratio. If you want to put the graph into 16:9, solve (width/16*9)/height to get the Y scale when X scale is 1.
+* X and Y Scale: Scales the graph on the X and Y axes without distorting lines and circles. Graphs for older games will generally be very flat, so this can be used to put the graph in a more readable aspect ratio. If you want to put the graph into 16:9, create the graph once with X and Y set to 1, then solve *width/16\*9/height* to get the Y scale when X scale is 1.
 
 ## SVG
 The resulting SVG file will be in the same directory as the CSV and have the same name. The file should be able to open in any vector editing program. Inkscape is free and easy to learn. From there, high quality PNGs can be rendered.
 
 Inkscape allows you to render specific elements. A helpful trick is to make a 16:9 black box to represent the screen and put it under all other layers. Inkscape also allows you to render objects that have gone outside the border.
 
-Example output:
+Example output (a few fake runs added for testing purposes):
 
 ![image](https://github.com/Pinsplash/LineRunner/assets/39359267/06bb89c6-64c0-400a-aa07-1156535f3061)
