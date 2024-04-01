@@ -1,5 +1,5 @@
 # Line Runner
-This program takes a CSV input and turns it into an SVG line graph. Intended to be used for creating speedrun history graphs. This was used in the making of this video: _
+This program takes a CSV input and turns it into an SVG line graph. Intended to be used for creating speedrun history graphs. This was used in the making of [this video](https://www.youtube.com/watch?v=eAnzeWR2EKc).
 
 Making a speedrun history graph by hand is error-prone and time-consuming. Some errors existed in my graph for Half-Life. SVG (Scalable Vector Graphics) allows you to zoom in infinitely on your graph, eliminating any need to use pixelated images.
 
