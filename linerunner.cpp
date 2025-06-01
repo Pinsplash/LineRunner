@@ -22,12 +22,23 @@ struct Run
 struct Category
 {
 	string name;
+	string color = "none";
 	vector<Run> runs;
+};
+
+enum ColorMode
+{
+	COLOR_BY_RUNNER,
+	COLOR_BY_RUNNER_RANDOM,
+	COLOR_MONO,
+	COLOR_MONO_RANDOM,
+	COLOR_BY_CATEGORY,
+	COLOR_BY_CATEGORY_RANDOM
 };
 
 struct GraphProperties
 {
-	bool randomColors;
+	ColorMode colormode = COLOR_BY_RUNNER;
 	double circleRadius;
 	double lineWidth;
 	double xScale;
@@ -187,7 +198,6 @@ int main(int argc, char* argv[])
 	vector<Category> categories;
 	GraphProperties props;
 	bool debug = argc == 1;
-	props.randomColors = false;
 	string answer;
 	string clrAnswer;
 	string path = debug ? "data.csv" : argv[1];
@@ -200,10 +210,11 @@ int main(int argc, char* argv[])
 	ParseFile(ReadFile, runners, categories, props);
 
 	cout << "\nGot file " << path << "\n";
-	cout << "Do you want individual colors for every runner?\nType 1 to use individual colors for every runner, then press ENTER.\n2 to use the same color for all runners.\n";
+	cout << "How to color lines and dots?\nType 1 to use individual colors for every runner, then press ENTER.\n2 to use the same color for all runners.\n3 to use different colors for every category\n";
 	getline(cin, answer);
 	if (answer == "1")
 	{
+		props.colormode = COLOR_BY_RUNNER;
 		for (Runner& runner : runners)
 		{
 			cout << "Please enter color to use for runner '" << runner.name << "'. (e.g. #ff00ff)\n";
@@ -211,23 +222,48 @@ int main(int argc, char* argv[])
 			runner.color = clrAnswer;
 		}
 	}
-	if (answer == "1 random")
+	else if (answer == "1 random")
 	{
+		props.colormode = COLOR_BY_RUNNER_RANDOM;
 		cout << "Every RUNNER will have a random color.\n";
 		for (Runner& runner : runners)
 			runner.color = RandomColor();
 	}
-	if (answer == "2")
+	else if (answer == "2")
 	{
+		props.colormode = COLOR_MONO;
 		cout << "Please enter color to use for all runs. (e.g. #ff00ff)\n";
 		getline(cin, clrAnswer);
 		for (Runner& runner : runners)
 			runner.color = clrAnswer;
 	}
-	if (answer == "2 random")
+	else if (answer == "2 random")
 	{
+		props.colormode = COLOR_MONO_RANDOM;
 		cout << "Every RUN will have a random color.\n";
-		props.randomColors = true;
+	}
+	else if (answer == "3")
+	{
+		props.colormode = COLOR_BY_CATEGORY;
+		for (Category& category : categories)
+		{
+			cout << "Please enter color to use for category '" << category.name << "'. (e.g. #ff00ff)\n";
+			getline(cin, clrAnswer);
+			category.color = clrAnswer;
+		}
+	}
+	else if (answer == "3 random")
+	{
+		props.colormode = COLOR_BY_CATEGORY_RANDOM;
+		cout << "Every CATEGORY will have a random color.\n";
+		for (Category& category : categories)
+			category.color = RandomColor();
+	}
+	else
+	{
+		cout << "Didn't recognize answer.\n";
+		cin.get();
+		return 0;
 	}
 	cout << "Please enter radius for circles (suggested: 10)\n";
 	getline(cin, answer);
@@ -244,34 +280,51 @@ int main(int argc, char* argv[])
 
 	cout << "Starting writing to " << file_without_extension << ".cfg\n";
 	writingFile << "<?xml version=\"1.0\" encoding=\"UTF - 8\" standalone=\"no\"?>\n";
-	writingFile << "<svg width = \"" << props.width * props.xScale << "mm\" height = \"" << props.height * props.yScale << "mm\" viewBox = \"0 0 " << props.width * props.xScale << " " << props.height * props.yScale << "\" version = \"1.1\" id = \"svg1\" > \n";
+	writingFile << "<svg width=\"" << props.width * props.xScale << "mm\" height=\"" << props.height * props.yScale << "mm\" viewBox=\"0 0 " << props.width * props.xScale << " " << props.height * props.yScale << "\" version=\"1.1\" id=\"svg1\" > \n";
 	for (Category& category : categories)
 	{
 		writingFile << "<g inkscape:groupmode=\"layer\" id=\"" << category.name << "\">\n";
 		string color;
-		if (props.randomColors)
+		switch (props.colormode)
+		{
+		case COLOR_MONO_RANDOM:
 			color = RandomColor();
-		else
+			break;
+		case COLOR_BY_CATEGORY:
+		case COLOR_BY_CATEGORY_RANDOM:
+			color = category.color;
+			break;
+		default://mono, runner, and runner random already decided colors
 			color = GetRunnerColor(runners, category.runs[0].name);
+			break;
+		}
 		string name = category.runs[0].name;
 		double days = category.runs[0].days;
 		double time = category.runs[0].time;
-		writingFile << "<circle style = \"fill:" << color << "\" id = \"" << name << "\" cx = \"" << days * props.xScale << "\" cy = \"" << (time - props.lowestTime) * props.yScale << "\" r = \"" << props.circleRadius << "\"/>\n";
+		writingFile << "<circle style=\"fill:" << color << "\" id=\"" << name << "\" cx=\"" << days * props.xScale << "\" cy=\"" << (time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
 		for (int i = 1; i < category.runs.size(); i++)
 		{
-			Run &run = category.runs[i];
-			writingFile << "<path style = \"stroke-width:" << props.lineWidth << ";stroke:" << color << ";stroke-opacity:1\" d = \"M "
+			Run& run = category.runs[i];
+			writingFile << "<path style=\"stroke-width:" << props.lineWidth << ";stroke:" << color << ";stroke-opacity:1\" d=\"M "
 				<< days * props.xScale <<		"," << (time - props.lowestTime) * props.yScale << " "
-				<< run.days * props.xScale << "," << (run.time - props.lowestTime) * props.yScale << "\" id = \"" << name << "\"/>\n";
-			color;
-			if (props.randomColors)
+				<< run.days * props.xScale << "," << (run.time - props.lowestTime) * props.yScale << "\" id=\"" << name << "\"/>\n";
+			switch (props.colormode)
+			{
+			case COLOR_MONO_RANDOM:
 				color = RandomColor();
-			else
+				break;
+			case COLOR_MONO:
+			case COLOR_BY_RUNNER:
+			case COLOR_BY_RUNNER_RANDOM:
 				color = GetRunnerColor(runners, run.name);
+				break;
+			default://category and category random don't change color here
+				break;
+			}
 			name = run.name;
 			days = run.days;
 			time = run.time;
-			writingFile << "<circle style = \"fill:" << color << "\" id = \"" << name << "\" cx = \"" << run.days * props.xScale << "\" cy = \"" << (run.time - props.lowestTime) * props.yScale << "\" r = \"" << props.circleRadius << "\"/>\n";
+			writingFile << "<circle style=\"fill:" << color << "\" id=\"" << category.name << "-" << name << "\" cx=\"" << run.days * props.xScale << "\" cy=\"" << (run.time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
 		}
 		writingFile << "</g>\n";
 	}
