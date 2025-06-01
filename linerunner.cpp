@@ -301,13 +301,13 @@ int main(int argc, char* argv[])
 		string name = category.runs[0].name;
 		double days = category.runs[0].days;
 		double time = category.runs[0].time;
-		writingFile << "<circle style=\"fill:" << color << "\" id=\"" << name << "\" cx=\"" << days * props.xScale << "\" cy=\"" << (time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
+		writingFile << "<circle style=\"fill:" << color << "\" id=\"" << category.name << "-" << name << "\" cx=\"" << days * props.xScale << "\" cy=\"" << (time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
 		for (int i = 1; i < category.runs.size(); i++)
 		{
 			Run& run = category.runs[i];
 			writingFile << "<path style=\"stroke-width:" << props.lineWidth << ";stroke:" << color << ";stroke-opacity:1\" d=\"M "
 				<< days * props.xScale <<		"," << (time - props.lowestTime) * props.yScale << " "
-				<< run.days * props.xScale << "," << (run.time - props.lowestTime) * props.yScale << "\" id=\"" << name << "\"/>\n";
+				<< run.days * props.xScale << "," << (run.time - props.lowestTime) * props.yScale << "\" id=\"" << category.name << "-" << name << " line\"/>\n";
 			switch (props.colormode)
 			{
 			case COLOR_MONO_RANDOM:
