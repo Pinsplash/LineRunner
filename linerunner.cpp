@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
 	getline(cin, answer);
 	props.yScale = atof(answer.c_str());
 
-	cout << "Starting writing to " << file_without_extension << ".cfg\n";
+	cout << "Starting writing to " << file_without_extension << ".svg\n";
 	writingFile << "<?xml version=\"1.0\" encoding=\"UTF - 8\" standalone=\"no\"?>\n";
 	writingFile << "<svg width=\"" << props.width * props.xScale << "mm\" height=\"" << props.height * props.yScale << "mm\" viewBox=\"0 0 " << props.width * props.xScale << " " << props.height * props.yScale << "\" version=\"1.1\" id=\"svg1\" > \n";
 	for (Category& category : categories)
