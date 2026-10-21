@@ -330,7 +330,7 @@ int main(int argc, char* argv[])
 		writingFile << "</g>\n";
 	}
 	writingFile << "</svg>\n";
-	std::cout << "Finished writing to " << file_without_extension << ".cfg\n";
+	std::cout << "Finished writing to " << file_without_extension << ".svg\n";
 	writingFile.close();
 	ReadFile.close();
 
