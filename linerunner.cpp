@@ -72,6 +72,16 @@ std::string GetRunnerColor(std::vector<Runner>& runners, std::string name)
 	return "";
 }
 
+double DaysToX(double run_days, GraphProperties& props)
+{
+	return run_days * props.xScale;
+}
+
+double TimeToY(double run_time, GraphProperties& props)
+{
+	return (run_time - (props.yScale > 0 ? props.lowestTime : props.height + props.lowestTime)) * props.yScale;
+}
+
 void ParseFile(std::ifstream& ReadFile, std::vector<Runner>& runners, std::vector<Category>& categories, GraphProperties& props)
 {
 	std::string textLine;
@@ -279,7 +289,7 @@ int main(int argc, char* argv[])
 
 	std::cout << "Starting writing to " << file_without_extension << ".svg\n";
 	writingFile << "<?xml version=\"1.0\" encoding=\"UTF - 8\" standalone=\"no\"?>\n";
-	writingFile << "<svg width=\"" << props.width * props.xScale << "mm\" height=\"" << props.height * props.yScale << "mm\" viewBox=\"0 0 " << props.width * props.xScale << " " << props.height * props.yScale << "\" version=\"1.1\" id=\"svg1\" > \n";
+	writingFile << "<svg width=\"" << abs(props.width * props.xScale) << "\" height=\"" << abs(props.height * props.yScale) << "\" viewBox=\"0 0 " << props.width * props.xScale << " " << props.height * props.yScale << "\" version=\"1.1\" id=\"svg1\" > \n";
 	for (Category& category : categories)
 	{
 		writingFile << "<g inkscape:groupmode=\"layer\" id=\"" << category.name << "\">\n";
@@ -301,13 +311,20 @@ int main(int argc, char* argv[])
 		start_name.erase(std::remove(start_name.begin(), start_name.end(), '\"'), start_name.end());
 		double start_days = category.runs[0].days;
 		double start_time = category.runs[0].time;
-		writingFile << "<circle style=\"fill:" << color << "\" id=\"" << category.name << "-" << start_name << "-" << start_time << "\" cx=\"" << start_days * props.xScale << "\" cy=\"" << (start_time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
+		writingFile << "<circle style=\"fill:" << color <<
+			"\" id=\"" << category.name << "-" << start_name << "-" << start_time <<
+			"\" cx=\"" << DaysToX(start_days, props) <<
+			"\" cy=\"" << TimeToY(start_time, props) <<
+			"\" r=\"" << props.circleRadius << "\"/>\n";
 		for (int i = 1; i < category.runs.size(); i++)
 		{
 			Run& run = category.runs[i];
-			writingFile << "<path style=\"stroke-width:" << props.lineWidth << ";stroke:" << color << ";stroke-opacity:1\" d=\"M "
-				<< start_days * props.xScale << "," << (start_time - props.lowestTime) * props.yScale << " "
-				<< run.days * props.xScale << "," << (run.time - props.lowestTime) * props.yScale << "\" id=\"" << category.name << "-" << start_name << "-" << start_time << " line\"/>\n";
+			writingFile << "<path style=\"stroke-width:" << props.lineWidth <<
+				";stroke:" << color <<
+				";stroke-opacity:1\" d=\"M "
+				<< DaysToX(start_days, props) << "," << TimeToY(start_time, props) << " "
+				<< DaysToX(run.days, props) << "," << TimeToY(run.time, props) <<
+				"\" id=\"" << category.name << "-" << start_name << "-" << start_time << " line\"/>\n";
 			switch (props.colormode)
 			{
 			case COLOR_MONO_RANDOM:
@@ -325,7 +342,11 @@ int main(int argc, char* argv[])
 			start_name.erase(std::remove(start_name.begin(), start_name.end(), '\"'), start_name.end());
 			start_days = run.days;
 			start_time = run.time;
-			writingFile << "<circle style=\"fill:" << color << "\" id=\"" << category.name << "-" << start_name << "-" << start_time << "\" cx=\"" << run.days * props.xScale << "\" cy=\"" << (run.time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
+			writingFile << "<circle style=\"fill:" << color <<
+				"\" id=\"" << category.name << "-" << start_name << "-" << start_time <<
+				"\" cx=\"" << DaysToX(run.days, props) <<
+				"\" cy=\"" << TimeToY(run.time, props) <<
+				"\" r=\"" << props.circleRadius << "\"/>\n";
 		}
 		writingFile << "</g>\n";
 	}
