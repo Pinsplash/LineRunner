@@ -299,6 +299,7 @@ int main(int argc, char* argv[])
 			break;
 		}
 		string name = category.runs[0].name;
+		name.erase(std::remove(name.begin(), name.end(), '\"'), name.end());
 		double days = category.runs[0].days;
 		double time = category.runs[0].time;
 		writingFile << "<circle style=\"fill:" << color << "\" id=\"" << category.name << "-" << name << "\" cx=\"" << days * props.xScale << "\" cy=\"" << (time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
@@ -322,6 +323,7 @@ int main(int argc, char* argv[])
 				break;
 			}
 			name = run.name;
+			name.erase(std::remove(name.begin(), name.end(), '\"'), name.end());
 			days = run.days;
 			time = run.time;
 			writingFile << "<circle style=\"fill:" << color << "\" id=\"" << category.name << "-" << name << "\" cx=\"" << run.days * props.xScale << "\" cy=\"" << (run.time - props.lowestTime) * props.yScale << "\" r=\"" << props.circleRadius << "\"/>\n";
